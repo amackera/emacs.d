@@ -4,7 +4,7 @@
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
  '(package-selected-packages
-   '(paredit orderless flycheck company direnv poetry exec-path-from-shell lsp-ui lsp-mode rainbow-delimiters eyebrowse fira-code-mode kaolin-themes projectile vertico magit use-package)))
+   '(ws-butler :pyvenv :transient paredit orderless flycheck company direnv poetry exec-path-from-shell lsp-ui lsp-mode rainbow-delimiters eyebrowse fira-code-mode kaolin-themes projectile vertico magit use-package)))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
@@ -52,8 +52,11 @@
 (goto-address-mode)
 (show-paren-mode 1)
 ; Delete trailing whitespace on save
-;; (add-hook 'before-save-hook 'delete-trailing-whitespace)
+(add-hook 'before-save-hook 'delete-trailing-whitespace)
 (setq inhibit-startup-message t)
+
+;; Select the help window when it opens
+(setq help-window-select t)
 
 ;; Interactive search key bindings. By default, C-s runs
 ;; isearch-forward, so this swaps the bindings.
@@ -138,6 +141,11 @@
   :config
   (global-flycheck-mode))
 
+(use-package ws-butler
+  :config
+  (setq ws-butler-keep-whitespace-before-point nil)
+  :hook prog-mode)
+
 (use-package lsp-mode
   :hook
   ((python-mode . lsp))
@@ -145,6 +153,12 @@
 
 (use-package lsp-ui
   :commands lsp-ui-mode)
+
+(use-package transient
+  :ensure t)
+
+(use-package pyvenv
+  :ensure t)
 
 (use-package poetry)
 
