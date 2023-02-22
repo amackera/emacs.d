@@ -4,7 +4,7 @@
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
  '(package-selected-packages
-   '(ws-butler :pyvenv :transient paredit orderless flycheck company direnv poetry exec-path-from-shell lsp-ui lsp-mode rainbow-delimiters eyebrowse fira-code-mode kaolin-themes projectile vertico magit use-package)))
+   '(logview python-black robot-mode yaml-mode auto-dim-other-buffers ws-butler :pyvenv :transient paredit orderless flycheck company direnv poetry exec-path-from-shell lsp-ui lsp-mode rainbow-delimiters eyebrowse fira-code-mode kaolin-themes projectile vertico magit use-package)))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
@@ -84,6 +84,10 @@
 ;; Global Key Bindings
 (global-set-key (kbd "C-x C-b") 'ibuffer)
 
+(setq backup-directory-alist `(("." . "~/.saves")))
+(setq backup-by-copying t)
+
+
 
 ;; ;; Packages and config
 ;; (use-package exec-path-from-shell
@@ -104,7 +108,9 @@
  :config
  (direnv-mode))
 
-(use-package magit)
+(use-package magit
+  :config
+  (setq magit-display-buffer-function 'magit-display-buffer-same-window-except-diff-v1))
 
 (use-package vertico
   :init
@@ -116,7 +122,6 @@
 
 (use-package kaolin-themes
   :config
-  (setq monokai-comments "#919191")
   (load-theme 'kaolin-galaxy t))
 
 (use-package fira-code-mode
@@ -160,7 +165,17 @@
 (use-package pyvenv
   :ensure t)
 
-(use-package poetry)
+(use-package poetry
+  :config (poetry-tracking-mode))
+
+(use-package python-black
+  :demand t
+  :after python
+  :hook (python-mode . python-black-on-save-mode-enable-dwim))
+
+(use-package auto-dim-other-buffers
+  :init
+  (add-hook 'after-init-hook (auto-dim-other-buffers-mode t)))
 
 (use-package paredit
   ;; See https://suvratapte.com/configuring-emacs-from-scratch-use-package/
@@ -185,3 +200,9 @@
   (setq completion-styles '(orderless basic)
         completion-category-defaults nil
         completion-category-overrides '((file (styles partial-completion)))))
+
+(use-package yaml-mode)
+
+(use-package robot-mode)
+
+(use-package logview)
