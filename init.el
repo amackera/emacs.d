@@ -15,6 +15,9 @@
  ;; If there is more than one, they won't work right.
  '(font-lock-comment-face ((t (:foreground "light slate gray" :slant normal)))))
 
+(setq mac-command-modifier 'meta)  ;; Use Command as Meta
+(set-frame-font "Fira Code-12" t t)  ;; Set Fira Code as the default font
+(server-start)
 
 (defvar bootstrap-version)
 (let ((bootstrap-file
@@ -139,17 +142,35 @@
   :init
   (vertico-mode))
 
-(use-package projectile)
-(projectile-global-mode)
-(define-key projectile-mode-map (kbd "C-c p") 'projectile-command-map)
+(use-package projectile
+  :ensure t
+  :diminish projectile-mode
+  :config
+  (setq projectile-indexing-method 'native) ;; Use Git for indexing
+  (setq projectile-enable-caching t) ;; Enable caching for faster performance
+  (setq projectile-git-command "git ls-files -zco --exclude-standard") ;; Use Git to respect .gitignore
+  (setq projectile-globally-ignored-directories '("node_modules" "vendor" ".cache"))
+  (setq projectile-globally-ignored-files '("*.log" "*.tmp" "*.map"))
+
+  ;; Enable Projectile globally
+  (projectile-mode +1)
+
+  ;; Optional: Set up a keymap prefix for Projectile commands
+  :bind-keymap
+  ("C-c p" . projectile-command-map))
+
+;; Ensure files opened from projectile-grep replace the grep window
+(setq display-buffer-alist
+      '(("\\*grep\\*" . (display-buffer-same-window))))
+
 
 (use-package kaolin-themes
   :config
   (load-theme 'kaolin-galaxy t))
 
-(use-package fira-code-mode
-  :custom (fira-code-mode-disabled-ligatures '("[]" "x"))
-  :hook prog-mode)
+;; (use-package fira-code-mode
+;;   :custom (fira-code-mode-disabled-ligatures '("[]" "x"))
+;;   :hook prog-mode)
 
 (use-package eyebrowse
   :init
@@ -337,20 +358,32 @@
 
 (image-type-available-p 'png)
 
-;; Make grep results open in the current window
-(add-to-list 'display-buffer-alist
-             '("\\*grep\\*"
-               (display-buffer-reuse-window
-                display-buffer-same-window)))
+(use-package all-the-icons
+  :if (display-graphic-p))
 
-(use-package popwin
-  :ensure t
+
+(use-package ligature
+  :straight t  ;; Or use `:ensure t` if you're using straight.el or package.el respectively
+  :hook (prog-mode . ligature-mode)
   :config
-  (popwin-mode 1)
-  (push '("^\\*Minitest\\( \\| .*\\)\\*$"
-          :regexp t
-          :position bottom
-          :height 0.3
-          :dedicated nil
-          :stick t) ;; Reuse a single window for all Minitest buffers
-        popwin:special-display-config))
+  ;; Enable specific ligatures for programming modes
+  (ligature-set-ligatures 'prog-mode
+                          '("www" "**" "***" "**/" "*>" "*/" "\\\\" "\\\\\\" "{-" "::"
+                            ":::" ":=" "!!" "!=" "!==" "-}" "----" "-->" "->" "-> " "->>"
+                            "-<" "-<<" "-~" "#{" "#[" "##" "###" "####" "#(" "#?" "#_"
+                            "#_(" ".-" ".=" ".." "..<" "..." "?=" "??" ";;" "/*" "/**"
+                            "/=" "/==" "/>" "//" "///" "&&" "||" "||=" "|=" "|>" "^=" "$>"
+                            "++" "+++" "+>" "=:=" "==" "===" "==>" "=>" "=>>" "<="
+                            "=<<" "=/=" ">-" ">=" ">=>" ">>" ">>-" ">>=" ">>>" "<*"
+                            "<*>" "<|" "<|>" "<$" "<$>" "<!--" "<-" "<--" "<->" "<+"
+                            "<+>" "<=" "<==" "<=>" "<=<" "<>" "<<" "<<-" "<<=" "<<<"
+                            "<~" "<~~" "</" "</>" "~@" "~-" "~>" "~~" "~~>" "%%"))
+  ;; Enable globally if needed
+  (global-ligature-mode t))
+
+(use-package grep
+  :ensure nil ;; grep is built into Emacs, no need to install
+  :config
+  (setq display-buffer-alist
+        '(("\\*grep\\*"
+           (display-buffer-same-window)))))

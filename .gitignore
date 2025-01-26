@@ -5,3 +5,6 @@ eshell/
 init.el~
 projectile-bookmarks.eld
 transient/
+straight/build
+.cache
+projects
