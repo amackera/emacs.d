@@ -16,6 +16,7 @@
  '(font-lock-comment-face ((t (:foreground "light slate gray" :slant normal)))))
 
 (setq mac-command-modifier 'meta)  ;; Use Command as Meta
+(global-unset-key (kbd "C-z"))
 (set-frame-font "Fira Code-12" t t)  ;; Set Fira Code as the default font
 (server-start)
 
@@ -190,13 +191,13 @@
   :config
   (global-flycheck-mode))
 
-(use-package lsp-mode
-  :hook
-  ((python-mode . lsp))
-  :commands lsp)
+;; (use-package lsp-mode
+;;   :hook
+;;   ((python-mode . lsp))
+;;   :commands lsp)
 
-(use-package lsp-ui
-  :commands lsp-ui-mode)
+;; (use-package lsp-ui
+;;   :commands lsp-ui-mode)
 
 (use-package transient
   :ensure t)
@@ -234,6 +235,7 @@
 (use-package vterm
   :ensure t
   :config
+  (global-set-key (kbd "C-x v") #'vterm)
   (setq vterm-environment
         (append vterm-environment '("VISUAL=emacsclient"))))
 
@@ -282,10 +284,36 @@
 
 (add-to-list 'auto-mode-alist '("\\.rb\\'" . enh-ruby-mode))
 
-(require 'eglot)
-;; Add solargraph as the server for enh-ruby-mode
-(add-to-list 'eglot-server-programs
-             '(enh-ruby-mode . ("solargraph" "socket" "--port" :autoport)))
+(use-package eglot
+  :ensure t
+  :hook
+  ((enh-ruby-mode . eglot-ensure)
+   (js-mode . eglot-ensure)
+   (js-ts-mode . eglot-ensure)
+   (typescript-mode . eglot-ensure)
+   (tsx-ts-mode . eglot-ensure))
+  :config
+  ;; Add Solargraph as the server for enh-ruby-mode
+  (add-to-list 'eglot-server-programs
+               '(enh-ruby-mode . ("solargraph" "socket" "--port" :autoport)))
+
+  ;; Use typescript-language-server for JS/TS/JSX/TSX
+  (add-to-list 'eglot-server-programs
+               '((js-mode js-ts-mode typescript-mode tsx-ts-mode)
+                 . ("typescript-language-server" "--stdio")))
+
+  ;; Ensure eglot is the xref backend
+  (add-hook 'eglot-managed-mode-hook
+            (lambda ()
+              (setq-local xref-backend-functions '(eglot-xref-backend)))))
+
+;; Unbind js-find-symbol in js-mode and force xref-find-definitions
+(with-eval-after-load 'js
+  (define-key js-mode-map (kbd "M-.") nil)
+  (define-key js-mode-map (kbd "M-.") #'xref-find-definitions))
+
+;; Global fallback for M-. to use xref
+(global-set-key (kbd "M-.") #'xref-find-definitions)
 
 ;; (use-package minitest
 ;;   :ensure t
