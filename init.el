@@ -4,7 +4,7 @@
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
  '(ein:jupyter-server-use-subcommand "server")
- '(ein:output-area-inlined-images t)
+ '(ein:output-area-inlined-images t t)
  '(org-export-backends '(ascii html icalendar latex md odt))
  '(package-selected-packages
    '(web-mode eruby-mode minitest enh-ruby-mode robe robe-mode prettier-js ox-hugo clojure-mode vterm logview python-black robot-mode yaml-mode auto-dim-other-buffers :pyvenv :transient paredit orderless flycheck company direnv poetry exec-path-from-shell lsp-ui lsp-mode rainbow-delimiters eyebrowse fira-code-mode kaolin-themes projectile vertico magit use-package)))
@@ -137,7 +137,8 @@
 
 (use-package magit
   :config
-  (setq magit-display-buffer-function 'magit-display-buffer-same-window-except-diff-v1))
+  (setq magit-display-buffer-function 'magit-display-buffer-same-window-except-diff-v1)
+  (setenv "GIT_CONFIG_GLOBAL" (expand-file-name "~/.gitconfig")))
 
 (use-package vertico
   :init
@@ -149,16 +150,39 @@
   :config
   (setq projectile-indexing-method 'native) ;; Use Git for indexing
   (setq projectile-enable-caching t) ;; Enable caching for faster performance
-  (setq projectile-git-command "git ls-files -zco --exclude-standard") ;; Use Git to respect .gitignore
-  (setq projectile-globally-ignored-directories '("node_modules" "vendor" ".cache"))
+  (setq projectile-git-command "git ls-files -zco --exclude-standard ':!logs/**'") ;; Use Git to respect .gitignore
+  (setq projectile-globally-ignored-directories '("node_modules" "vendor" ".cache" "log" "tmp"))
   (setq projectile-globally-ignored-files '("*.log" "*.tmp" "*.map"))
 
   ;; Enable Projectile globally
   (projectile-mode +1)
 
+  (defun my/projectile-setup-vterm ()
+    "Open multiple vterm buffers with specific names when switching to a project."
+    (when (projectile-project-p)
+      (let* ((project-name (projectile-project-name))
+             (term1-name (format "*%s-shell*" project-name))
+             (term2-name (format "*%s-server*" project-name))
+             (term3-name (format "*%s-console*" project-name)))
+        (unless (get-buffer term1-name)
+          (with-current-buffer (vterm)
+            (rename-buffer term1-name)
+            (vterm-send-string (format "cd %s\n" (projectile-project-root)))))
+        (unless (get-buffer term2-name)
+          (with-current-buffer (vterm)
+            (rename-buffer term2-name)
+            (vterm-send-string (format "cd %s\n" (projectile-project-root)))))
+        (unless (get-buffer term3-name)
+          (with-current-buffer (vterm)
+            (rename-buffer term3-name)
+            (vterm-send-string (format "cd %s\n" (projectile-project-root))))))))
+
+  ;; Attach hook to run when switching projects
+  (add-hook 'projectile-after-switch-project-hook #'my/projectile-setup-vterm)
+
   ;; Optional: Set up a keymap prefix for Projectile commands
   :bind-keymap
-  ("C-c p" . projectile-command-map))
+  ("C-c p" . projectile-command-map) )
 
 ;; Ensure files opened from projectile-grep replace the grep window
 (setq display-buffer-alist
@@ -315,6 +339,8 @@
 ;; Global fallback for M-. to use xref
 (global-set-key (kbd "M-.") #'xref-find-definitions)
 
+(setq warning-minimum-level :error)
+
 ;; (use-package minitest
 ;;   :ensure t
 ;;   :init
@@ -415,3 +441,20 @@
   (setq display-buffer-alist
         '(("\\*grep\\*"
            (display-buffer-same-window)))))
+
+(use-package aider
+  :straight (:host github :repo "tninja/aider.el" :files ("aider.el"))
+  :config
+  ;; (setq aider-args '("--model" "anthropic/claude-3-5-sonnet-20241022"))
+  ;; (setenv "ANTHROPIC_API_KEY" anthropic-api-key)
+  ;; Or use chatgpt model since it is most well known
+  (setq aider-args '("--model" "gpt-4o"))
+  (setenv "OPENAI_API_KEY" (getenv "OPENAI_API_KEY"))
+  ;; Or use gemini v2 model since it is very good and free
+  ;; (setq aider-args '("--model" "gemini/gemini-exp-1206"))
+  ;; (setenv "GEMINI_API_KEY" <your-gemini-api-key>)
+  ;; Or use your personal config file
+  ;; (setq aider-args `("--config" ,(expand-file-name "~/.aider.conf.yml")))
+  ;; ;;
+  ;; Optional: Set a key binding for the transient menu
+  (global-set-key (kbd "C-c a") 'aider-transient-menu))
