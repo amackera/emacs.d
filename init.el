@@ -5,6 +5,18 @@
  ;; If there is more than one, they won't work right.
  '(ein:jupyter-server-use-subcommand "server")
  '(ein:output-area-inlined-images t t)
+ '(grep-command "grep --color=auto -nH --null -e ")
+ '(grep-find-command
+   '("find . -type f -exec grep --color=auto -nH --null -e  \\{\\} +" . 54))
+ '(grep-find-ignored-directories
+   '("SCCS" "RCS" "CVS" "MCVS" ".src" ".svn" ".git" ".hg" ".bzr" "_MTN" "_darcs" "{arch}" "builds"))
+ '(grep-find-template
+   "find -H <D> <X> -type f <F> -exec grep <C> -nH --null -e <R> \\{\\} +")
+ '(grep-find-use-xargs 'exec-plus)
+ '(grep-highlight-matches 'auto)
+ '(grep-template "grep <X> <C> -nH --null -e <R> <F>")
+ '(grep-use-null-device nil)
+ '(grep-use-null-filename-separator t)
  '(org-export-backends '(ascii html icalendar latex md odt))
  '(package-selected-packages
    '(web-mode eruby-mode minitest enh-ruby-mode robe robe-mode prettier-js ox-hugo clojure-mode vterm logview python-black robot-mode yaml-mode auto-dim-other-buffers :pyvenv :transient paredit orderless flycheck company direnv poetry exec-path-from-shell lsp-ui lsp-mode rainbow-delimiters eyebrowse fira-code-mode kaolin-themes projectile vertico magit use-package)))
@@ -151,7 +163,7 @@
   (setq projectile-indexing-method 'native) ;; Use Git for indexing
   (setq projectile-enable-caching t) ;; Enable caching for faster performance
   (setq projectile-git-command "git ls-files -zco --exclude-standard ':!logs/**'") ;; Use Git to respect .gitignore
-  (setq projectile-globally-ignored-directories '("node_modules" "vendor" ".cache" "log" "tmp"))
+  (setq projectile-globally-ignored-directories '("node_modules" "vendor" ".cache" "log" "tmp" "builds"))
   (setq projectile-globally-ignored-files '("*.log" "*.tmp" "*.map"))
 
   ;; Enable Projectile globally
@@ -183,11 +195,6 @@
   ;; Optional: Set up a keymap prefix for Projectile commands
   :bind-keymap
   ("C-c p" . projectile-command-map) )
-
-;; Ensure files opened from projectile-grep replace the grep window
-(setq display-buffer-alist
-      '(("\\*grep\\*" . (display-buffer-same-window))))
-
 
 (use-package kaolin-themes
   :config
@@ -434,13 +441,6 @@
                             "<~" "<~~" "</" "</>" "~@" "~-" "~>" "~~" "~~>" "%%"))
   ;; Enable globally if needed
   (global-ligature-mode t))
-
-(use-package grep
-  :ensure nil ;; grep is built into Emacs, no need to install
-  :config
-  (setq display-buffer-alist
-        '(("\\*grep\\*"
-           (display-buffer-same-window)))))
 
 (use-package aider
   :straight (:host github :repo "tninja/aider.el" :files ("aider.el"))
