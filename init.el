@@ -19,7 +19,7 @@
  '(grep-use-null-filename-separator t)
  '(org-export-backends '(ascii html icalendar latex md odt))
  '(package-selected-packages
-   '(web-mode eruby-mode minitest enh-ruby-mode robe robe-mode prettier-js ox-hugo clojure-mode vterm logview python-black robot-mode yaml-mode auto-dim-other-buffers :pyvenv :transient paredit orderless flycheck company direnv poetry exec-path-from-shell lsp-ui lsp-mode rainbow-delimiters eyebrowse fira-code-mode kaolin-themes projectile vertico magit use-package)))
+   '(web-mode eruby-mode enh-ruby-mode robe robe-mode prettier-js ox-hugo clojure-mode vterm logview python-black robot-mode yaml-mode auto-dim-other-buffers :pyvenv :transient paredit orderless flycheck company poetry exec-path-from-shell lsp-ui lsp-mode rainbow-delimiters eyebrowse fira-code-mode projectile vertico magit use-package)))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
@@ -78,7 +78,6 @@
 (global-display-line-numbers-mode)
 (global-hl-line-mode nil)
 (tool-bar-mode -1)
-(menu-bar-mode -1)
 (scroll-bar-mode -1)
 (blink-cursor-mode 0)
 (setq-default frame-title-format "%b (%f)")
@@ -125,13 +124,6 @@
 (setq backup-directory-alist `(("." . "~/.saves")))
 (setq backup-by-copying t)
 
-;; ;; Packages and config
-;; (use-package exec-path-from-shell
-;;   :ensure t
-;;   :if (memq window-system '(mac ns x))
-;;   :config
-;;   (setq exec-path-from-shell-variables '("PATH"))
-;;   (exec-path-from-shell-initialize))
 
 (use-package exec-path-from-shell
   :ensure t
@@ -204,9 +196,9 @@
 ;;   :custom (fira-code-mode-disabled-ligatures '("[]" "x"))
 ;;   :hook prog-mode)
 
-(use-package eyebrowse
-  :init
-  (eyebrowse-mode))
+;; (use-package eyebrowse
+;;   :init
+;;   (eyebrowse-mode))
 
 (use-package rainbow-delimiters
   :ensure t
@@ -219,8 +211,9 @@
   (global-company-mode t))
 
 (use-package flycheck
-  :config
-  (global-flycheck-mode))
+  :ensure t
+  :init
+  (global-flycheck-mode 1))
 
 ;; (use-package lsp-mode
 ;;   :hook
@@ -411,17 +404,8 @@
   (add-hook 'prog-mode-hook 'copilot-mode))
 
 
-(use-package ein
-  :ensure t
-  :config
-  (setq ein:password "abc123")
-  (setq ein:output-area-inlined-images t))
-
-(image-type-available-p 'png)
-
 (use-package all-the-icons
   :if (display-graphic-p))
-
 
 (use-package ligature
   :straight t  ;; Or use `:ensure t` if you're using straight.el or package.el respectively
@@ -442,22 +426,34 @@
   ;; Enable globally if needed
   (global-ligature-mode t))
 
-(use-package aider
-  :straight (:host github :repo "tninja/aider.el" :files ("aider.el"))
-  :config
-  ;; (setq aider-args '("--model" "anthropic/claude-3-5-sonnet-20241022"))
-  ;; (setenv "ANTHROPIC_API_KEY" anthropic-api-key)
-  ;; Or use chatgpt model since it is most well known
-  (setq aider-args '("--model" "gpt-4o"))
-  (setenv "OPENAI_API_KEY" (getenv "OPENAI_API_KEY"))
-  ;; Or use gemini v2 model since it is very good and free
-  ;; (setq aider-args '("--model" "gemini/gemini-exp-1206"))
-  ;; (setenv "GEMINI_API_KEY" <your-gemini-api-key>)
-  ;; Or use your personal config file
-  ;; (setq aider-args `("--config" ,(expand-file-name "~/.aider.conf.yml")))
-  ;; ;;
-  ;; Disable automatic commits
-  (setq aider-auto-commit nil)
+(use-package aidermacs
+  :straight (:host github :repo "MatthewZMD/aidermacs")
+  :bind (("C-c a" . aidermacs-transient-menu))
 
-  ;; Optional: Set a key binding for the transient menu
-  (global-set-key (kbd "C-c a") 'aider-transient-menu))
+  :config
+  (aidermacs-setup-minor-mode)
+  (setq aidermacs-backend 'vterm)
+  (setq aidermacs-vterm-multiline-newline-key "S-<return>"))
+
+(use-package ediff
+  :ensure nil  ;; `ediff` is built-in, so no need to install it
+  :custom
+  ;; Show diffs side by side instead of stacked
+  (ediff-split-window-function 'split-window-horizontally)
+  ;; Prevent ediff from making a new frame
+  (ediff-window-setup-function 'ediff-setup-windows-plain))
+
+
+;; Treemacs configuration added
+
+(use-package treemacs-projectile
+  :after (treemacs projectile)
+  :ensure t)
+
+(use-package treemacs-icons-dired
+  :hook (dired-mode . treemacs-icons-dired-enable-once)
+  :ensure t)
+
+(use-package treemacs-magit
+  :after (treemacs magit)
+  :ensure t)
