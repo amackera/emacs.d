@@ -83,6 +83,36 @@
 (setq-default frame-title-format "%b (%f)")
 (setq ring-bell-function 'ignore)
 (setq-default left-fringe-width  10)
+
+;; Scrolling settings
+(pixel-scroll-precision-mode 1)
+(setq pixel-scroll-precision-large-scroll-height 3.0)  ;; Reduce from default
+(setq pixel-scroll-precision-interpolation-factor 0.8) ;; Lower for slower scrolling
+(setq mouse-wheel-progressive-speed nil)               ;; Disable acceleration
+(setq mouse-wheel-progressive-speed-factor 1.5)
+(setq mouse-wheel-scroll-amount '(1 ((shift) . 1)))    ;; One line at a time
+(setq inhibit-compacting-font-caches t)                ;; Keep this for performance
+(setq-default bidi-display-reordering nil)             ;; Keep this for performance
+(setq jit-lock-defer-time 0.05)                        ;; Keep this for performance
+
+;; Increase garbage collection threshold
+(setq gc-cons-threshold 100000000) ;; 100MB
+(setq gc-cons-percentage 0.6)
+
+;; Disable line numbers for some modes
+(dolist (mode '(org-mode-hook
+                term-mode-hook
+                vterm-mode-hook
+                shell-mode-hook
+                treemacs-mode-hook
+                eshell-mode-hook
+                pdf-view-mode-hook))
+  (add-hook mode (lambda () (display-line-numbers-mode 0))))
+
+;; Run garbage collection when Emacs is idle or out of focus
+(add-hook 'focus-out-hook #'garbage-collect)
+(run-with-idle-timer 5 t #'garbage-collect)
+
 ;; Split windows vertically instead of horizontally
 (setq split-width-threshold 0)
 (setq split-height-threshold nil)
