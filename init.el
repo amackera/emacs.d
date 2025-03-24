@@ -124,6 +124,13 @@
 (setq backup-directory-alist `(("." . "~/.saves")))
 (setq backup-by-copying t)
 
+;; Store auto-save files in ~/.saves too
+(setq auto-save-file-name-transforms
+      `((".*" ,(expand-file-name "~/.saves/") t)))
+
+;; Make sure the directory exists
+(make-directory "~/.saves/" t)
+
 
 (use-package exec-path-from-shell
   :ensure t
