@@ -180,7 +180,7 @@
 
 (use-package magit
   :config
-  (setq magit-display-buffer-function 'magit-display-buffer-same-window-except-diff-v1)
+  (setq magit-display-buffer-function 'magit-display-buffer-fullframe-status-v1)
   (setenv "GIT_CONFIG_GLOBAL" (expand-file-name "~/.gitconfig")))
 
 (use-package vertico
@@ -472,7 +472,11 @@
   :config
   (aidermacs-setup-minor-mode)
   (setq aidermacs-backend 'vterm)
-  (setq aidermacs-vterm-multiline-newline-key "S-<return>"))
+  (setq aidermacs-vterm-multiline-newline-key "S-<return>")
+  ;; Ensure Aidermacs buffers open in the side window
+  (setq aidermacs-display-buffer-function
+        (lambda (buffer)
+          (display-buffer buffer '(display-buffer-reuse-window shackle-display-buffer)))))
 
 (use-package ediff
   :ensure nil  ;; `ediff` is built-in, so no need to install it
@@ -496,3 +500,32 @@
 (use-package treemacs-magit
   :after (treemacs magit)
   :ensure t)
+
+;; window management with shackle
+(use-package shackle
+  :ensure t
+  :config
+  (setq shackle-rules
+        '(
+          ;; Buffers that should appear in the right side window
+          (magit-status-mode :align right :size 0.35 :select t)
+          (magit-log-mode :align right :size 0.35 :select t)
+          (magit-diff-mode :align right :size 0.35 :select t)
+          (magit-process-mode :align right :size 0.35 :select t)
+          (magit-revision-mode :align right :size 0.35 :select t)
+          (vterm-mode :align right :size 0.35 :select t)
+          ("\\*aidermacs.*\\*" :regexp t :align right :size 0.35 :select t)
+          ("\\*Async Shell Command\\*.*" :regexp t :align right :size 0.35 :select t)
+          ("\\*xref\\*" :regexp t :align right :size 0.35 :select t)
+          ("\\*Flycheck.*\\*" :regexp t :align right :size 0.35 :select nil)
+          ("\\*Help\\*" :align right :size 0.35 :select t)
+          ("\\*Warnings\\*" :align right :size 0.35 :select t)
+          ("\\*Messages\\*" :align right :size 0.35 :select t)
+          ("\\*Compile-Log\\*" :align right :size 0.35 :select t)
+          ("\\*compilation\\*" :align right :size 0.35 :select t)
+          ("\\*grep\\*" :align right :size 0.35 :select t)
+          ("\\*Completions\\*" :align right :size 0.35 :select nil)
+          ;; Default rule for all other special buffers
+          ('(special-mode help-mode) :align right :size 0.35 :select t)
+          ))
+  (shackle-mode 1))
