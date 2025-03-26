@@ -85,15 +85,17 @@
 (setq-default left-fringe-width  10)
 
 ;; Scrolling settings
+;; Touchpad - try more extreme values
 (pixel-scroll-precision-mode 1)
-(setq pixel-scroll-precision-large-scroll-height 3.0)  ;; Reduce from default
-(setq pixel-scroll-precision-interpolation-factor 0.8) ;; Lower for slower scrolling
+
+;; Mouse wheel
 (setq mouse-wheel-progressive-speed nil)               ;; Disable acceleration
-(setq mouse-wheel-progressive-speed-factor 1.5)
-(setq mouse-wheel-scroll-amount '(1 ((shift) . 1)))    ;; One line at a time
-(setq inhibit-compacting-font-caches t)                ;; Keep this for performance
-(setq-default bidi-display-reordering nil)             ;; Keep this for performance
-(setq jit-lock-defer-time 0.05)                        ;; Keep this for performance
+(setq mouse-wheel-scroll-amount '(3 ((shift) . 1)))
+
+;; Performance
+(setq inhibit-compacting-font-caches t)
+(setq-default bidi-display-reordering nil)
+(setq jit-lock-defer-time 0.05)
 
 ;; Increase garbage collection threshold
 (setq gc-cons-threshold 100000000) ;; 100MB
