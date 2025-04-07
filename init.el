@@ -205,9 +205,9 @@
     "Open multiple vterm buffers with specific names when switching to a project."
     (when (projectile-project-p)
       (let* ((project-name (projectile-project-name))
-             (term1-name (format "*%s-shell*" project-name))
-             (term2-name (format "*%s-server*" project-name))
-             (term3-name (format "*%s-console*" project-name)))
+             (term1-name (format "*vterm-%s-shell*" project-name))
+             (term2-name (format "*vterm-%s-server*" project-name))
+             (term3-name (format "*vterm-%s-console*" project-name)))
         (unless (get-buffer term1-name)
           (with-current-buffer (vterm)
             (rename-buffer term1-name)
@@ -422,6 +422,16 @@
   (web-mode-css-indent-offset 2)
   (web-mode-code-indent-offset 2))
 
+(use-package markdown-mode
+  :ensure t
+  :mode ("\\.md\\'" . markdown-mode)
+  :init
+  (setq markdown-command "multimarkdown")
+  :config
+  (setq markdown-fontify-code-blocks-natively t)
+  (setq markdown-enable-math t)
+  (setq markdown-hide-markup nil))
+
 (use-package copilot
   :straight (:host github :repo "copilot-emacs/copilot.el" :files ("*.el"))
   :ensure t
@@ -489,6 +499,10 @@
 
 
 ;; Treemacs configuration added
+(use-package treemacs
+  :ensure t
+  :bind
+  (("C-c t" . treemacs)))
 
 (use-package treemacs-projectile
   :after (treemacs projectile)
@@ -502,33 +516,75 @@
   :after (treemacs magit)
   :ensure t)
 
+
+
 ;; window management with shackle
-(use-package shackle
+;; (use-package shackle
+;;   :ensure t
+;;   :config
+;;   (setq shackle-select-reused-windows t) ;; Always select the reused window
+;;   (setq shackle-rules
+;;         '(
+;;           ;; Buffers that should appear in the right side window
+;;           (magit-status-mode :align right :size 0.35 :other t)
+;;           (magit-log-mode :align right :size 0.35 :other t)
+;;           (magit-diff-mode :align right :size 0.35 :other t)
+;;           (magit-process-mode :align right :size 0.35 :other t)
+;;           (magit-revision-mode :align right :size 0.35 :other t)
+;;           (vterm-mode :align right :size 0.35 :select t :other t)
+;;           ("COMMIT_EDITMSG" :regexp t :align right :size 0.35 :select t :other t)
+;;           ("\\*aidermacs.*\\*" :regexp t :align right :size 0.35 :select t :other t)
+;;           ("\\*Async Shell Command\\*.*" :regexp t :align right :size 0.35 :select t)
+;;           ("\\*xref\\*" :regexp t :align right :size 0.35 :select t :reuse t)
+;;           ("\\*Flycheck.*\\*" :regexp t :align right :size 0.35 :select nil :other t)
+;;           ("\\*Help\\*" :align right :size 0.35 :select t :other t)
+;;           ("\\*Warnings\\*" :align right :size 0.35 :select t :other t)
+;;           ("\\*Messages\\*" :align right :size 0.35 :select t :other t)
+;;           ("\\*Compile-Log\\*" :align right :size 0.35 :select t :other t)
+;;           ("\\*compilation\\*" :align right :size 0.35 :select t :other t)
+;;           ("\\*grep\\*" :align right :size 0.35 :select t :other t)
+;;           ("\\*Completions\\*" :align right :size 0.35 :select nil :other t)
+;;           ;; Default rule for all other special buffers
+;;           ('(special-mode help-mode) :align right :size 0.35 :select t :other t)
+;;           ))
+;;   (shackle-mode 1))
+
+(use-package window-purpose
   :ensure t
   :config
-  (setq shackle-select-reused-windows t) ;; Always select the reused window
-  (setq shackle-rules
-        '(
-          ;; Buffers that should appear in the right side window
-          (magit-status-mode :align right :size 0.35 :other t)
-          (magit-log-mode :align right :size 0.35 :other t)
-          (magit-diff-mode :align right :size 0.35 :other t)
-          (magit-process-mode :align right :size 0.35 :other t)
-          (magit-revision-mode :align right :size 0.35 :other t)
-          (vterm-mode :align right :size 0.35 :select t :other t)
-          ("COMMIT_EDITMSG" :regexp t :align right :size 0.35 :select t :other t)
-          ("\\*aidermacs.*\\*" :regexp t :align right :size 0.35 :select t :other t)
-          ("\\*Async Shell Command\\*.*" :regexp t :align right :size 0.35 :select t)
-          ("\\*xref\\*" :regexp t :align right :size 0.35 :select t :reuse t)
-          ("\\*Flycheck.*\\*" :regexp t :align right :size 0.35 :select nil :other t)
-          ("\\*Help\\*" :align right :size 0.35 :select t :other t)
-          ("\\*Warnings\\*" :align right :size 0.35 :select t :other t)
-          ("\\*Messages\\*" :align right :size 0.35 :select t :other t)
-          ("\\*Compile-Log\\*" :align right :size 0.35 :select t :other t)
-          ("\\*compilation\\*" :align right :size 0.35 :select t :other t)
-          ("\\*grep\\*" :align right :size 0.35 :select t :other t)
-          ("\\*Completions\\*" :align right :size 0.35 :select nil :other t)
-          ;; Default rule for all other special buffers
-          ('(special-mode help-mode) :align right :size 0.35 :select t :other t)
-          ))
-  (shackle-mode 1))
+  ;; Enable purpose-mode globally
+  (purpose-mode)
+
+  ;; Associate major modes with purposes
+  (setq purpose-user-mode-purposes
+        '((emacs-lisp-mode . code)
+          (python-mode . code)
+          (mardown-mode . code)
+          (js-mode . code)
+          (typescript-mode . code)
+          (web-mode . code)
+          (compilation-mode . work)
+          (help-mode . work)
+          (eshell-mode . work)
+          (magit-status-mode . work)
+          (vterm . work)
+          (markdown-mode . code)
+          (yaml-mode . code)
+          (org-mode . code)))
+
+  ;; Associate buffer names with purposes
+  (setq purpose-user-name-purposes
+        '(("*Help*" . work)
+          ("*compilation*" . work)
+          ("*eshell*" . work)
+          ("*Messages*" . work)
+          ("COMMIT_EDITMSG" . code)
+          ("*scratch*" . work)))
+
+  (setq purpose-user-regexp-purposes
+        '(("\\*aider.*" . work)
+          ("\\*vterm.*" . work)
+          ("magit.*" . work)))
+
+  (purpose-compile-user-configuration))
+-
