@@ -524,39 +524,6 @@
   :after (treemacs magit)
   :ensure t)
 
-
-
-;; window management with shackle
-;; (use-package shackle
-;;   :ensure t
-;;   :config
-;;   (setq shackle-select-reused-windows t) ;; Always select the reused window
-;;   (setq shackle-rules
-;;         '(
-;;           ;; Buffers that should appear in the right side window
-;;           (magit-status-mode :align right :size 0.35 :other t)
-;;           (magit-log-mode :align right :size 0.35 :other t)
-;;           (magit-diff-mode :align right :size 0.35 :other t)
-;;           (magit-process-mode :align right :size 0.35 :other t)
-;;           (magit-revision-mode :align right :size 0.35 :other t)
-;;           (vterm-mode :align right :size 0.35 :select t :other t)
-;;           ("COMMIT_EDITMSG" :regexp t :align right :size 0.35 :select t :other t)
-;;           ("\\*aidermacs.*\\*" :regexp t :align right :size 0.35 :select t :other t)
-;;           ("\\*Async Shell Command\\*.*" :regexp t :align right :size 0.35 :select t)
-;;           ("\\*xref\\*" :regexp t :align right :size 0.35 :select t :reuse t)
-;;           ("\\*Flycheck.*\\*" :regexp t :align right :size 0.35 :select nil :other t)
-;;           ("\\*Help\\*" :align right :size 0.35 :select t :other t)
-;;           ("\\*Warnings\\*" :align right :size 0.35 :select t :other t)
-;;           ("\\*Messages\\*" :align right :size 0.35 :select t :other t)
-;;           ("\\*Compile-Log\\*" :align right :size 0.35 :select t :other t)
-;;           ("\\*compilation\\*" :align right :size 0.35 :select t :other t)
-;;           ("\\*grep\\*" :align right :size 0.35 :select t :other t)
-;;           ("\\*Completions\\*" :align right :size 0.35 :select nil :other t)
-;;           ;; Default rule for all other special buffers
-;;           ('(special-mode help-mode) :align right :size 0.35 :select t :other t)
-;;           ))
-;;   (shackle-mode 1))
-
 (use-package window-purpose
   :ensure t
   :config
