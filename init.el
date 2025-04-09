@@ -563,4 +563,3 @@
           ("magit.*" . work)))
 
   (purpose-compile-user-configuration))
--
