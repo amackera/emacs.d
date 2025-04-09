@@ -545,7 +545,8 @@
           (vterm . work)
           (markdown-mode . code)
           (yaml-mode . code)
-          (org-mode . code)))
+          (org-mode . code)
+          (enh-ruby-mode . code)))
 
   ;; Associate buffer names with purposes
   (setq purpose-user-name-purposes
