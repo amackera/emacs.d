@@ -10,6 +10,8 @@
    '("find . -type f -exec grep --color=auto -nH --null -e  \\{\\} +" . 54))
  '(grep-find-ignored-directories
    '("SCCS" "RCS" "CVS" "MCVS" ".src" ".svn" ".git" ".hg" ".bzr" "_MTN" "_darcs" "{arch}" "builds"))
+ '(grep-find-ignored-files
+   '("*.o" "*.elc" "*.so" "*.a" "*.la" "*.lo" "*.dll" "*.exe" "*.obj" "*.pyo" "*.pyc" ".aider.chat.history.md" ".byebug_history" ".aider.input.history"))
  '(grep-find-template
    "find -H <D> <X> -type f <F> -exec grep <C> -nH --null -e <R> \\{\\} +")
  '(grep-find-use-xargs 'exec-plus)
@@ -29,6 +31,7 @@
 
 (setq mac-command-modifier 'meta)  ;; Use Command as Meta
 (global-unset-key (kbd "C-z"))
+(global-unset-key (kbd "C-x C-z"))
 (set-frame-font "Fira Code-12" t t)  ;; Set Fira Code as the default font
 (server-start)
 
@@ -355,6 +358,7 @@
   (setq-default flycheck-disabled-checkers '(ruby-rubocop)))
 
 (add-to-list 'auto-mode-alist '("\\.rb\\'" . enh-ruby-mode))
+(add-to-list 'auto-mode-alist '("\\.ru\\'" . enh-ruby-mode))
 
 (use-package eglot
   :ensure t
@@ -486,7 +490,7 @@
 
 (use-package aidermacs
   :straight (:host github :repo "MatthewZMD/aidermacs")
-  :bind (("C-c a" . aidermacs-transient-menu))
+  :bind (("C-c C-a" . aidermacs-transient-menu))
 
   :config
   (aidermacs-setup-minor-mode)
@@ -535,6 +539,7 @@
         '((emacs-lisp-mode . code)
           (python-mode . code)
           (mardown-mode . code)
+          (conf-toml-mode . code)
           (js-mode . code)
           (typescript-mode . code)
           (web-mode . code)
@@ -546,12 +551,16 @@
           (markdown-mode . code)
           (yaml-mode . code)
           (org-mode . code)
-          (enh-ruby-mode . code)))
+          (text-mode . code)
+          (enh-ruby-mode . code)
+          (dockerfile-mode . code)))
 
   ;; Associate buffer names with purposes
   (setq purpose-user-name-purposes
         '(("*Help*" . work)
           ("*compilation*" . work)
+          ("*Org Agenda*" . work)
+          ("*Agenda Commands*" . work)
           ("*eshell*" . work)
           ("*Messages*" . work)
           ("COMMIT_EDITMSG" . code)
@@ -563,3 +572,46 @@
           ("magit.*" . work)))
 
   (purpose-compile-user-configuration))
+
+(use-package org
+  :config
+  ;; Where Org looks for agenda & refile targets
+  (setq org-directory "~/Dropbox/org"
+        org-agenda-files '("~/Dropbox/org/tasks.org"
+                           "~/Dropbox/org/calendar.org"
+                           "~/Dropbox/org/inbox.org")
+        org-default-notes-file "~/Dropbox/org/inbox.org")
+
+  ;; Quality‑of‑life defaults
+  (setq org-log-done 'time          ; time‑stamp when DONE
+        org-startup-indented t      ; pretty outline
+        org-hide-leading-stars t)   ; no leading ★★★
+
+  ;; Quick global keys
+  (global-set-key (kbd "C-c c") #'org-capture)
+  (global-set-key (kbd "C-c a") #'org-agenda))
+
+;; ───────────────────────────
+;;  Nicer bullets (optional)
+;; ───────────────────────────
+(use-package org-bullets
+  :hook (org-mode . org-bullets-mode))
+
+;; ───────────────────────────
+;;  Capture templates
+;; ───────────────────────────
+(setq org-capture-templates
+      '(("t" "🗒️  Todo" entry
+         (file+headline "~/org/inbox.org" "Tasks")
+         "* TODO %?\n  %U\n  %a")
+        ("n" "📝 Note" entry
+         (file+datetree "~/org/inbox.org")
+         "* %?\n  Entered on %U\n  %a")))
+
+(use-package yard-mode
+  :ensure t
+  :hook (enh-ruby-mode . yard-mode))
+
+(use-package dockerfile-mode
+  :ensure t
+  :mode ("Dockerfile\\'" . dockerfile-mode))
