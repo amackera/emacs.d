@@ -11,3 +11,8 @@ straight/
 projects
 .aider*
 url/
+backups/
+tree-sitter/
+tramp
+logview-cache.extmap
+eln-cache/
