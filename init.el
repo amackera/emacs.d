@@ -18,6 +18,7 @@
 (setq inhibit-startup-message t ring-bell-function 'ignore)
 (show-paren-mode 1)
 (setq-default indent-tabs-mode nil)
+(fset 'yes-or-no-p 'y-or-n-p)
 (global-set-key (kbd "C-;") (lambda () (interactive)
                                (comment-or-uncomment-region (line-beginning-position)
                                                             (line-end-position))))
@@ -84,6 +85,21 @@
                 projectile-enable-caching t)
   :bind-keymap ("C-c p" . projectile-command-map))
 
+;; Auto-open vterm buffers when switching projects
+(defun my-projectile-open-vterms ()
+  "Open three vterm buffers (server, shell, console) for the current project."
+  (let* ((project-name (projectile-project-name))
+         (project-root (projectile-project-root))
+         (buffers '("server" "shell" "console")))
+    (dolist (buf-name buffers)
+      (let ((vterm-buffer-name (format "*vterm-%s-%s*" project-name buf-name)))
+        (unless (get-buffer vterm-buffer-name)
+          (let ((vterm-shell (getenv "SHELL")))
+            (with-current-buffer (vterm vterm-buffer-name)
+              (rename-buffer vterm-buffer-name))))))))
+
+(add-hook 'projectile-after-switch-project-hook #'my-projectile-open-vterms)
+
 (use-package magit
   :config (setq magit-display-buffer-function
                 'magit-display-buffer-same-window-except-diff-v1))
@@ -130,7 +146,9 @@
   :init
   ;; Prefer ts mode when available
   (setq major-mode-remap-alist
-        (append '((elixir-mode . elixir-ts-mode)) major-mode-remap-alist)))
+        (append '((elixir-mode . elixir-ts-mode)) major-mode-remap-alist))
+  :config
+  (setq elixir-ts-indent-offset 2))
 
 (use-package heex-ts-mode
   :ensure t
@@ -159,7 +177,9 @@
 (use-package pyvenv
   :ensure t
   :hook (python-ts-mode . (lambda ()
-                            (pyvenv-track-virtualenv))))
+                            (let ((venv-path (concat (projectile-project-root) ".venv")))
+                              (when (file-directory-p venv-path)
+                                (pyvenv-activate venv-path))))))
 
 (use-package eglot
   :ensure t
@@ -247,7 +267,7 @@
 ;; (use-package treemacs :bind (("C-c t" . treemacs)))
 ;; (use-package window-purpose :config (purpose-mode))
 ;; (use-package poetry :config (poetry-tracking-mode))
-;; (use-package direnv :config (direnv-mode))
+(use-package direnv :config (direnv-mode))
 
 
 ;; (add-to-list 'load-path "/Users/amackera/.emacs.d/asdf")
@@ -261,10 +281,11 @@
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
  '(package-selected-packages
-   '(0blayout claude-code enh-ruby-mode exec-path-from-shell flycheck
-              kaolin-themes logview magit markdown-mode orderless
-              org-bullets paredit projectile rainbow-delimiters
-              realgud typescript-mode vertico vterm web-mode yaml-mode))
+   '(0blayout claude-code direnv enh-ruby-mode exec-path-from-shell
+              flycheck kaolin-themes logview magit markdown-mode
+              orderless org-bullets paredit projectile pyvenv
+              rainbow-delimiters realgud typescript-mode vertico vterm
+              web-mode yaml-mode))
  '(package-vc-selected-packages
    '((claude-code :url "https://github.com/stevemolitor/claude-code.el"))))
 (custom-set-faces
