@@ -112,6 +112,26 @@
 ;;; --- visuals / misc ---
 (use-package kaolin-themes :config (load-theme 'kaolin-galaxy t))
 (use-package rainbow-delimiters :hook (prog-mode . rainbow-delimiters-mode))
+
+;; Dim inactive buffers to make active buffer obvious
+(use-package dimmer
+  :ensure t
+  :config
+  (dimmer-mode t)
+  ;; Adjust the dimming intensity (0.0 = no dim, 1.0 = very dim)
+  (setq dimmer-fraction 0.35))
+
+;; Highlight active mode line
+(set-face-attribute 'mode-line nil
+                    :background "#3a5a7a"  ;; slightly darker blue for better contrast
+                    :foreground "#f0f0f0"  ;; bright but not harsh white
+                    :weight 'semi-bold     ;; make text bolder for readability
+                    :box '(:line-width 2 :color "#3a5a7a"))
+(set-face-attribute 'mode-line-inactive nil
+                    :background "#2e3440"  ;; slightly darker gray
+                    :foreground "#8a8f98"  ;; slightly brighter for readability
+                    :weight 'normal
+                    :box '(:line-width 1 :color "#232831"))
 (use-package yaml-mode)
 (use-package logview)
 (use-package web-mode
@@ -253,13 +273,14 @@
   :vc (:url "https://github.com/stevemolitor/claude-code.el" :rev :newest)
   :custom
   (claude-code-terminal-backend 'vterm)
-  ;; (claude-code-vterm-buffer-multiline-output t)
-  ;; (claude-code-vterm-multiline-delay 0.001)
-  :config 
-  (claude-code-mode)
+  :config
+  ;; (claude-code-mode)
+  ;; Disable line numbers in claude-code buffers
+  (add-hook 'buffer-list-update-hook
+            (lambda ()
+              (when (string-prefix-p "*claude:" (buffer-name))
+                (display-line-numbers-mode 0))))
   :bind-keymap ("C-c l" . claude-code-command-map)
-  
-  ;; Optionally define a repeat map so that "M" will cycle thru Claude auto-accept/plan/confirm modes after invoking claude-code-cycle-mode / C-c M.
   :bind
   (:repeat-map my-claude-code-map ("M" . claude-code-cycle-mode)))
 
@@ -280,12 +301,7 @@
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
- '(package-selected-packages
-   '(0blayout claude-code direnv enh-ruby-mode exec-path-from-shell
-              flycheck kaolin-themes logview magit markdown-mode
-              orderless org-bullets paredit projectile pyvenv
-              rainbow-delimiters realgud typescript-mode vertico vterm
-              web-mode yaml-mode))
+ '(package-selected-packages nil)
  '(package-vc-selected-packages
    '((claude-code :url "https://github.com/stevemolitor/claude-code.el"))))
 (custom-set-faces
