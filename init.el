@@ -107,6 +107,7 @@
 (use-package vterm
   :ensure t
   :bind (("C-x v" . vterm))
+  :hook (vterm-mode . (lambda () (display-line-numbers-mode -1)))
   :config (setq vterm-environment (append vterm-environment '("VISUAL=emacsclient"))))
 
 ;;; --- visuals / misc ---
