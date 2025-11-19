@@ -119,7 +119,11 @@
   :config
   (dimmer-mode t)
   ;; Adjust the dimming intensity (0.0 = no dim, 1.0 = very dim)
-  (setq dimmer-fraction 0.35))
+  (setq dimmer-fraction 0.35)
+  ;; Don't dim transient popup menus (like magit's ? menu)
+  (setq dimmer-prevent-dimming-predicates '(window-minibuffer-p))
+  (with-eval-after-load 'transient
+    (add-to-list 'dimmer-buffer-exclusion-regexps "^ \\*transient\\*")))
 
 ;; Highlight active mode line
 (set-face-attribute 'mode-line nil
