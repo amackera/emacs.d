@@ -1,9 +1,11 @@
+
 ;;; --- bootstrap package.el ---
 (setq package-enable-at-startup t)
 (require 'package)
 (setq package-archives
-      '(("gnu"   . "https://elpa.gnu.org/packages/")
-        ("melpa" . "https://melpa.org/packages/")))
+      '(("gnu"    . "https://elpa.gnu.org/packages/")
+        ("nongnu" . "https://elpa.nongnu.org/nongnu/")
+        ("melpa"  . "https://melpa.org/packages/")))
 (package-initialize)
 
 (unless (package-installed-p 'use-package)
@@ -85,6 +87,12 @@
                 projectile-enable-caching t)
   :bind-keymap ("C-c p" . projectile-command-map))
 
+;; Display grep results in current window (replacing it)
+(add-to-list 'display-buffer-alist
+             '("\\*grep\\*\\|\\*ripgrep-search\\*"
+               (display-buffer-same-window)
+               (inhibit-same-window . nil)))
+
 ;; Auto-open vterm buffers when switching projects
 (defun my-projectile-open-vterms ()
   "Open three vterm buffers (server, shell, console) for the current project."
@@ -121,10 +129,14 @@
   (dimmer-mode t)
   ;; Adjust the dimming intensity (0.0 = no dim, 1.0 = very dim)
   (setq dimmer-fraction 0.35)
+  ;; Don't dim when switching away from Emacs window
+  (setq dimmer-watch-frame-focus-events nil)
   ;; Don't dim transient popup menus (like magit's ? menu)
   (setq dimmer-prevent-dimming-predicates '(window-minibuffer-p))
   (with-eval-after-load 'transient
-    (add-to-list 'dimmer-buffer-exclusion-regexps "^ \\*transient\\*")))
+    (add-to-list 'dimmer-buffer-exclusion-regexps "^ \\*transient\\*"))
+  ;; Exclude claude-code buffers from dimmer to reduce overhead
+  (add-to-list 'dimmer-buffer-exclusion-regexps "\\*claude:.*\\*"))
 
 ;; Highlight active mode line
 (set-face-attribute 'mode-line nil
@@ -167,6 +179,7 @@
   :mode "\\.exs?\\'"
   :hook ((elixir-ts-mode . eglot-ensure)
          (elixir-ts-mode . (lambda ()
+                             (add-hook 'before-save-hook #'delete-trailing-whitespace nil t)
                              (add-hook 'before-save-hook #'eglot-format-buffer nil t))))
   :init
   ;; Prefer ts mode when available
@@ -180,13 +193,15 @@
   :mode "\\.heex\\'"
   :hook ((heex-ts-mode . eglot-ensure)
          (heex-ts-mode . (lambda ()
+                           (add-hook 'before-save-hook #'delete-trailing-whitespace nil t)
                            (add-hook 'before-save-hook #'eglot-format-buffer nil t)))))
 
 ;;; --- JavaScript/TypeScript ---
-(use-package js-mode
-  :ensure nil  ;; built-in
-  :mode "\\.js\\'"
-  :config
+;; Remap js-mode to js-ts-mode (tree-sitter version)
+(add-to-list 'major-mode-remap-alist '(js-mode . js-ts-mode))
+
+;; Configure js-ts-mode
+(with-eval-after-load 'js
   (setq js-indent-level 2))
 
 (use-package typescript-mode
@@ -268,26 +283,41 @@
 (with-eval-after-load 'treesit
   (setq treesit-language-source-alist
         (append treesit-language-source-alist
-                '((json   "https://github.com/tree-sitter/tree-sitter-json")
-                  (python "https://github.com/tree-sitter/tree-sitter-python")
-                  (elixir "https://github.com/elixir-lang/tree-sitter-elixir")
-                  (heex "https://github.com/phoenixframework/tree-sitter-heex")))))
+                '((json       "https://github.com/tree-sitter/tree-sitter-json")
+                  (python     "https://github.com/tree-sitter/tree-sitter-python")
+                  (javascript "https://github.com/tree-sitter/tree-sitter-javascript")
+                  (typescript "https://github.com/tree-sitter/tree-sitter-typescript" "master" "typescript/src")
+                  (tsx        "https://github.com/tree-sitter/tree-sitter-typescript" "master" "tsx/src")
+                  (elixir     "https://github.com/elixir-lang/tree-sitter-elixir")
+                  (heex       "https://github.com/phoenixframework/tree-sitter-heex")))))
 
+
+(use-package eat
+  :ensure t
+  :hook (eat-mode . (lambda ()
+                      (display-line-numbers-mode -1)
+                      (setq-local scroll-conservatively 101)
+                      (setq-local scroll-margin 0)
+                      (setq-local maximum-scroll-margin 0))))
 
 (use-package claude-code :ensure t
   :vc (:url "https://github.com/stevemolitor/claude-code.el" :rev :newest)
   :custom
-  (claude-code-terminal-backend 'vterm)
-  :config
-  ;; (claude-code-mode)
-  ;; Disable line numbers in claude-code buffers
-  (add-hook 'buffer-list-update-hook
-            (lambda ()
-              (when (string-prefix-p "*claude:" (buffer-name))
-                (display-line-numbers-mode 0))))
+  (claude-code-terminal-backend 'eat)
   :bind-keymap ("C-c l" . claude-code-command-map)
   :bind
   (:repeat-map my-claude-code-map ("M" . claude-code-cycle-mode)))
+
+;; Display claude-code, grep, and vterm buffers in right side window
+(dolist (pattern '("\\*claude:.*\\*"
+                   "\\*grep\\*"
+                   "\\*rg\\*"
+                   "\\*vterm.*\\*"))
+  (add-to-list 'display-buffer-alist
+               `(,pattern
+                 (display-buffer-in-side-window)
+                 (side . right)
+                 (window-width . 0.33))))
 
 ;;; --- keep what you actually use often; comment others out for now ---
 ;; (use-package treemacs :bind (("C-c t" . treemacs)))
@@ -306,7 +336,12 @@
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
- '(package-selected-packages nil)
+ '(package-selected-packages
+   '(0blayout auto-dim-other-buffers claude-code dimmer direnv eat
+              enh-ruby-mode exec-path-from-shell flycheck
+              kaolin-themes logview magit markdown-mode orderless
+              org-bullets paredit projectile pyvenv rainbow-delimiters
+              realgud typescript-mode vertico vterm web-mode yaml-mode))
  '(package-vc-selected-packages
    '((claude-code :url "https://github.com/stevemolitor/claude-code.el"))))
 (custom-set-faces
