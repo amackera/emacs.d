@@ -292,13 +292,32 @@
                   (heex       "https://github.com/phoenixframework/tree-sitter-heex")))))
 
 
+(defun my-eat-resize-window (win)
+  "Resize eat terminal in WIN to match window dimensions."
+  (with-selected-window win
+    (with-current-buffer (window-buffer win)
+      (when (and (derived-mode-p 'eat-mode) (bound-and-true-p eat-terminal))
+        (let ((proc (eat-term-parameter eat-terminal 'eat--process)))
+          (when proc
+            (set-process-window-size proc
+                                     (floor (window-screen-lines))
+                                     (window-max-chars-per-line win))))))))
+
 (use-package eat
   :ensure t
   :hook (eat-mode . (lambda ()
                       (display-line-numbers-mode -1)
                       (setq-local scroll-conservatively 101)
                       (setq-local scroll-margin 0)
-                      (setq-local maximum-scroll-margin 0))))
+                      (setq-local maximum-scroll-margin 0)))
+  :config
+  ;; Force eat to recalculate terminal size after window changes
+  (add-hook 'window-size-change-functions
+            (lambda (frame)
+              (dolist (win (window-list frame))
+                (with-current-buffer (window-buffer win)
+                  (when (derived-mode-p 'eat-mode)
+                    (my-eat-resize-window win)))))))
 
 (use-package claude-code :ensure t
   :vc (:url "https://github.com/stevemolitor/claude-code.el" :rev :newest)
@@ -325,6 +344,17 @@
 ;; (use-package poetry :config (poetry-tracking-mode))
 (use-package direnv :config (direnv-mode))
 
+;;; --- window utilities ---
+(defun my-reset-side-window-width ()
+  "Reset the right side window to 33% of frame width."
+  (interactive)
+  (when-let ((win (window-with-parameter 'window-side 'right)))
+    (let ((target-width (round (* 0.33 (frame-width)))))
+      (with-selected-window win
+        (enlarge-window-horizontally (- target-width (window-width))))
+      (my-eat-resize-window win))))
+
+(global-set-key (kbd "C-c w r") #'my-reset-side-window-width)
 
 ;; (add-to-list 'load-path "/Users/amackera/.emacs.d/asdf")
 ;; (require 'asdf)
@@ -336,12 +366,7 @@
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
- '(package-selected-packages
-   '(0blayout auto-dim-other-buffers claude-code dimmer direnv eat
-              enh-ruby-mode exec-path-from-shell flycheck
-              kaolin-themes logview magit markdown-mode orderless
-              org-bullets paredit projectile pyvenv rainbow-delimiters
-              realgud typescript-mode vertico vterm web-mode yaml-mode))
+ '(package-selected-packages nil)
  '(package-vc-selected-packages
    '((claude-code :url "https://github.com/stevemolitor/claude-code.el"))))
 (custom-set-faces
