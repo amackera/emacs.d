@@ -142,13 +142,15 @@
 (set-face-attribute 'mode-line nil
                     :background "#3a5a7a"  ;; slightly darker blue for better contrast
                     :foreground "#f0f0f0"  ;; bright but not harsh white
-                    :weight 'semi-bold     ;; make text bolder for readability
+                    :weight 'normal        ;; consistent with inactive to prevent height jitter
                     :box '(:line-width 2 :color "#3a5a7a"))
+(set-face-attribute 'mode-line-active nil
+                    :inherit 'mode-line)
 (set-face-attribute 'mode-line-inactive nil
                     :background "#2e3440"  ;; slightly darker gray
                     :foreground "#8a8f98"  ;; slightly brighter for readability
                     :weight 'normal
-                    :box '(:line-width 1 :color "#232831"))
+                    :box '(:line-width 2 :color "#232831"))
 (use-package yaml-mode)
 (use-package logview)
 (use-package web-mode
