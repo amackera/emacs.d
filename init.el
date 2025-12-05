@@ -299,11 +299,15 @@
   (with-selected-window win
     (with-current-buffer (window-buffer win)
       (when (and (derived-mode-p 'eat-mode) (bound-and-true-p eat-terminal))
-        (let ((proc (eat-term-parameter eat-terminal 'eat--process)))
-          (when proc
-            (set-process-window-size proc
-                                     (floor (window-screen-lines))
-                                     (window-max-chars-per-line win))))))))
+        (let* ((proc (eat-term-parameter eat-terminal 'eat--process))
+               (new-height (floor (window-screen-lines)))
+               (new-width (window-max-chars-per-line win)))
+          (when (and proc
+                     (or (not (eq new-height (process-get proc 'my-last-height)))
+                         (not (eq new-width (process-get proc 'my-last-width)))))
+            (process-put proc 'my-last-height new-height)
+            (process-put proc 'my-last-width new-width)
+            (set-process-window-size proc new-height new-width)))))))
 
 (use-package eat
   :ensure t
@@ -327,7 +331,57 @@
   (claude-code-terminal-backend 'eat)
   :bind-keymap ("C-c l" . claude-code-command-map)
   :bind
-  (:repeat-map my-claude-code-map ("M" . claude-code-cycle-mode)))
+  (:repeat-map my-claude-code-map ("M" . claude-code-cycle-mode))
+  :config
+  ;; Override scroll function to always keep output visible, even when unfocused
+  (defun claude-code--eat-synchronize-scroll (windows)
+    "Synchronize scroll for WINDOWS, keeping cursor visible even when unfocused."
+    (let ((cursor-pos (eat-term-display-cursor eat-terminal)))
+      (dolist (window windows)
+        (cond
+         ;; For buffer point, only move when not read-only
+         ((eq window 'buffer)
+          (unless buffer-read-only
+            (goto-char cursor-pos)))
+         ;; For windows, always keep cursor visible
+         ((window-live-p window)
+          ;; Only move window-point when not read-only
+          (unless buffer-read-only
+            (set-window-point window cursor-pos))
+          ;; Always scroll window to keep cursor visible
+          (unless (pos-visible-in-window-p cursor-pos window)
+            (set-window-start window
+                              (save-excursion
+                                (goto-char cursor-pos)
+                                (forward-line (- (/ (window-height window) 2)))
+                                (point))
+                              t)))))))
+
+)
+
+;; Preserve scroll position in claude buffers during minibuffer use
+(defvar my-claude-saved-positions nil)
+
+(defun my-claude-save-positions ()
+  "Save scroll positions of claude buffer windows."
+  (setq my-claude-saved-positions
+        (cl-loop for win in (window-list)
+                 when (string-match-p "\\*claude:.*\\*"
+                                      (buffer-name (window-buffer win)))
+                 collect (cons win (window-start win)))))
+
+(defun my-claude-restore-positions ()
+  "Restore scroll positions after minibuffer closes."
+  (when my-claude-saved-positions
+    (run-at-time 0.1 nil
+                 (lambda (positions)
+                   (dolist (entry positions)
+                     (when (window-live-p (car entry))
+                       (set-window-start (car entry) (cdr entry) t))))
+                 my-claude-saved-positions)))
+
+(add-hook 'minibuffer-setup-hook #'my-claude-save-positions)
+(add-hook 'minibuffer-exit-hook #'my-claude-restore-positions)
 
 ;; Display claude-code, grep, and vterm buffers in right side window
 (dolist (pattern '("\\*claude:.*\\*"
