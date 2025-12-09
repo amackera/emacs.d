@@ -267,6 +267,7 @@
 
 ;; If you use Flycheck elsewhere, avoid double diagnostics
 (with-eval-after-load 'flycheck
+  (declare-function flycheck-mode "flycheck")
   (add-hook 'python-ts-mode-hook (lambda () (flycheck-mode -1))))
 
 ;;; --- Ruby extras you rely on (kept) ---
