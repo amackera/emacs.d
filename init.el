@@ -79,6 +79,9 @@
               completion-category-defaults nil
               completion-category-overrides '((file (styles partial-completion)))))
 
+(use-package marginalia
+  :init (marginalia-mode))
+
 ;;; --- projects / git / terminals ---
 (use-package projectile
   :diminish projectile-mode
@@ -374,9 +377,10 @@
  '(package-selected-packages
    '(0blayout auto-dim-other-buffers claude-code dimmer direnv eat
               enh-ruby-mode exec-path-from-shell flycheck
-              kaolin-themes logview magit markdown-mode orderless
-              org-bullets paredit projectile pyvenv rainbow-delimiters
-              realgud typescript-mode vertico vterm web-mode yaml-mode))
+              kaolin-themes logview magit marginalia markdown-mode
+              orderless org-bullets paredit projectile pyvenv
+              rainbow-delimiters realgud typescript-mode vertico vterm
+              web-mode yaml-mode))
  '(package-vc-selected-packages
    '((claude-code :url "https://github.com/stevemolitor/claude-code.el"))))
 (custom-set-faces
