@@ -314,10 +314,7 @@
 (use-package eat
   :ensure t
   :hook (eat-mode . (lambda ()
-                      (display-line-numbers-mode -1)
-                      (setq-local scroll-conservatively 101)
-                      (setq-local scroll-margin 0)
-                      (setq-local maximum-scroll-margin 0)))
+                      (display-line-numbers-mode -1)))
   :config
   ;; Force eat to recalculate terminal size after window changes
   (add-hook 'window-size-change-functions
@@ -330,60 +327,10 @@
 (use-package claude-code :ensure t
   :vc (:url "https://github.com/stevemolitor/claude-code.el" :rev :newest)
   :custom
-  (claude-code-terminal-backend 'eat)
+  (claude-code-terminal-backend 'vterm)
   :bind-keymap ("C-c l" . claude-code-command-map)
   :bind
-  (:repeat-map my-claude-code-map ("M" . claude-code-cycle-mode))
-  :config
-  ;; Override scroll function to always keep output visible, even when unfocused
-  (defun claude-code--eat-synchronize-scroll (windows)
-    "Synchronize scroll for WINDOWS, keeping cursor visible even when unfocused."
-    (let ((cursor-pos (eat-term-display-cursor eat-terminal)))
-      (dolist (window windows)
-        (cond
-         ;; For buffer point, only move when not read-only
-         ((eq window 'buffer)
-          (unless buffer-read-only
-            (goto-char cursor-pos)))
-         ;; For windows, always keep cursor visible
-         ((window-live-p window)
-          ;; Only move window-point when not read-only
-          (unless buffer-read-only
-            (set-window-point window cursor-pos))
-          ;; Always scroll window to keep cursor visible
-          (unless (pos-visible-in-window-p cursor-pos window)
-            (set-window-start window
-                              (save-excursion
-                                (goto-char cursor-pos)
-                                (forward-line (- (/ (window-height window) 2)))
-                                (point))
-                              t)))))))
-
-)
-
-;; Preserve scroll position in claude buffers during minibuffer use
-(defvar my-claude-saved-positions nil)
-
-(defun my-claude-save-positions ()
-  "Save scroll positions of claude buffer windows."
-  (setq my-claude-saved-positions
-        (cl-loop for win in (window-list)
-                 when (string-match-p "\\*claude:.*\\*"
-                                      (buffer-name (window-buffer win)))
-                 collect (cons win (window-start win)))))
-
-(defun my-claude-restore-positions ()
-  "Restore scroll positions after minibuffer closes."
-  (when my-claude-saved-positions
-    (run-at-time 0.1 nil
-                 (lambda (positions)
-                   (dolist (entry positions)
-                     (when (window-live-p (car entry))
-                       (set-window-start (car entry) (cdr entry) t))))
-                 my-claude-saved-positions)))
-
-(add-hook 'minibuffer-setup-hook #'my-claude-save-positions)
-(add-hook 'minibuffer-exit-hook #'my-claude-restore-positions)
+  (:repeat-map my-claude-code-map ("M" . claude-code-cycle-mode)))
 
 ;; Display claude-code, grep, and vterm buffers in right side window
 (dolist (pattern '("\\*claude:.*\\*"
@@ -424,7 +371,12 @@
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
- '(package-selected-packages nil)
+ '(package-selected-packages
+   '(0blayout auto-dim-other-buffers claude-code dimmer direnv eat
+              enh-ruby-mode exec-path-from-shell flycheck
+              kaolin-themes logview magit markdown-mode orderless
+              org-bullets paredit projectile pyvenv rainbow-delimiters
+              realgud typescript-mode vertico vterm web-mode yaml-mode))
  '(package-vc-selected-packages
    '((claude-code :url "https://github.com/stevemolitor/claude-code.el"))))
 (custom-set-faces
