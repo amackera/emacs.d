@@ -123,20 +123,21 @@
 (use-package rainbow-delimiters :hook (prog-mode . rainbow-delimiters-mode))
 
 ;; Dim inactive buffers to make active buffer obvious
-(use-package dimmer
-  :ensure t
-  :config
-  (dimmer-mode t)
-  ;; Adjust the dimming intensity (0.0 = no dim, 1.0 = very dim)
-  (setq dimmer-fraction 0.35)
-  ;; Don't dim when switching away from Emacs window
-  (setq dimmer-watch-frame-focus-events nil)
-  ;; Don't dim transient popup menus (like magit's ? menu)
-  (setq dimmer-prevent-dimming-predicates '(window-minibuffer-p))
-  (with-eval-after-load 'transient
-    (add-to-list 'dimmer-buffer-exclusion-regexps "^ \\*transient\\*"))
-  ;; Exclude claude-code buffers from dimmer to reduce overhead
-  (add-to-list 'dimmer-buffer-exclusion-regexps "\\*claude:.*\\*"))
+;; Disabled - causes scroll issues with eat terminal buffers
+;; (use-package dimmer
+;;   :ensure t
+;;   :config
+;;   (dimmer-mode t)
+;;   ;; Adjust the dimming intensity (0.0 = no dim, 1.0 = very dim)
+;;   (setq dimmer-fraction 0.35)
+;;   ;; Don't dim when switching away from Emacs window
+;;   (setq dimmer-watch-frame-focus-events nil)
+;;   ;; Don't dim transient popup menus (like magit's ? menu)
+;;   (setq dimmer-prevent-dimming-predicates '(window-minibuffer-p))
+;;   (with-eval-after-load 'transient
+;;     (add-to-list 'dimmer-buffer-exclusion-regexps "^ \\*transient\\*"))
+;;   ;; Exclude claude-code buffers from dimmer to reduce overhead
+;;   (add-to-list 'dimmer-buffer-exclusion-regexps "\\*claude:.*\\*"))
 
 ;; Highlight active mode line
 (set-face-attribute 'mode-line nil
