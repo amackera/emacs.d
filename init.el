@@ -16,7 +16,18 @@
 
 ;;; --- UI / basics ---
 (menu-bar-mode -1) (tool-bar-mode -1) (scroll-bar-mode -1)
-(global-display-line-numbers-mode 1)
+
+;; Enable line numbers globally, but exclude terminal and special modes
+(defun my-display-line-numbers-mode-maybe ()
+  "Enable line numbers unless in a mode where they don't make sense."
+  (unless (derived-mode-p 'vterm-mode 'term-mode 'shell-mode 'eshell-mode
+                          'eat-mode 'treemacs-mode 'org-mode 'pdf-view-mode
+                          'claude-code-mode)
+    (display-line-numbers-mode 1)))
+
+(add-hook 'prog-mode-hook #'my-display-line-numbers-mode-maybe)
+(add-hook 'text-mode-hook #'my-display-line-numbers-mode-maybe)
+(add-hook 'conf-mode-hook #'my-display-line-numbers-mode-maybe)
 (setq inhibit-startup-message t ring-bell-function 'ignore)
 (show-paren-mode 1)
 (setq-default indent-tabs-mode nil)
@@ -47,10 +58,6 @@
 (setq gc-cons-threshold 100000000 gc-cons-percentage 0.6)
 (add-hook 'focus-out-hook #'garbage-collect)
 (run-with-idle-timer 5 t #'garbage-collect)
-(dolist (hook '(org-mode-hook term-mode-hook vterm-mode-hook shell-mode-hook
-                              treemacs-mode-hook eshell-mode-hook pdf-view-mode-hook
-                              claude-code-mode-hook))
-  (add-hook hook (lambda () (display-line-numbers-mode 0))))
 
 ;;; --- asdf setup ---
 (add-to-list 'load-path "~/.emacs.d/site-lisp/asdf-vm")
@@ -82,6 +89,9 @@
 (use-package marginalia
   :init (marginalia-mode))
 
+(use-package avy
+  :bind ("C-'" . avy-goto-char-timer))
+
 ;;; --- projects / git / terminals ---
 (use-package projectile
   :diminish projectile-mode
@@ -103,7 +113,6 @@
 (use-package vterm
   :ensure t
   :bind (("C-x v" . vterm))
-  :hook (vterm-mode . (lambda () (display-line-numbers-mode -1)))
   :config (setq vterm-environment (append vterm-environment '("VISUAL=emacsclient"))))
 
 ;;; --- visuals / misc ---
@@ -318,8 +327,6 @@
 
 (use-package eat
   :ensure t
-  :hook (eat-mode . (lambda ()
-                      (display-line-numbers-mode -1)))
   :config
   ;; Force eat to recalculate terminal size after window changes
   (add-hook 'window-size-change-functions
@@ -385,7 +392,13 @@
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
- '(package-selected-packages '(shotify swift-ts-mode))
+ '(package-selected-packages
+   '(0blayout auto-dim-other-buffers avy claude-code dimmer direnv eat
+              enh-ruby-mode exec-path-from-shell flycheck
+              kaolin-themes logview magit marginalia markdown-mode
+              orderless org-bullets paredit projectile pyvenv
+              rainbow-delimiters realgud shotify swift-ts-mode
+              typescript-mode vertico vterm web-mode yaml-mode))
  '(package-vc-selected-packages
    '((shotify :url "https://github.com/amackera/shotify" :lisp-dir
               "adapters/emacs")
