@@ -335,6 +335,15 @@
   :bind
   (:repeat-map my-claude-code-map ("M" . claude-code-cycle-mode)))
 
+(use-package shotify
+  :vc (:url "https://github.com/amackera/shotify"
+       :lisp-dir "adapters/emacs"
+       :rev :newest)
+  :bind (("C-c s s" . shotify-screenshot)
+         ("C-c s b" . shotify-screenshot-buffer)
+         ("C-c s c" . shotify-screenshot-to-clipboard)
+         ("C-c s C" . shotify-screenshot-buffer-to-clipboard)))
+
 ;; Display claude-code, grep, and vterm buffers in right side window
 (dolist (pattern '("\\*claude:.*\\*"
                    "\\*grep\\*"
@@ -374,15 +383,12 @@
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
- '(package-selected-packages
-   '(0blayout auto-dim-other-buffers claude-code dimmer direnv eat
-              enh-ruby-mode exec-path-from-shell flycheck
-              kaolin-themes logview magit marginalia markdown-mode
-              orderless org-bullets paredit projectile pyvenv
-              rainbow-delimiters realgud typescript-mode vertico vterm
-              web-mode yaml-mode))
+ '(package-selected-packages '(shotify))
  '(package-vc-selected-packages
-   '((claude-code :url "https://github.com/stevemolitor/claude-code.el"))))
+   '((shotify :url "https://github.com/amackera/shotify" :lisp-dir
+              "adapters/emacs")
+     (claude-code :url
+                  "https://github.com/stevemolitor/claude-code.el"))))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
