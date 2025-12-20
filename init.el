@@ -216,6 +216,9 @@
   :config
   (setq typescript-indent-level 2))
 
+;; TSX files use tree-sitter tsx-ts-mode
+(add-to-list 'auto-mode-alist '("\\.tsx\\'" . tsx-ts-mode))
+
 ;;; --- Python: Eglot + Pyright (single source of truth) ---
 (add-to-list 'major-mode-remap-alist '(python-mode . python-ts-mode))
 
