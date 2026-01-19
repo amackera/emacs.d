@@ -89,6 +89,24 @@
 (use-package marginalia
   :init (marginalia-mode))
 
+(use-package consult
+  :bind (("C-s" . consult-line)
+         ("C-x b" . consult-buffer)
+         ("M-g g" . consult-goto-line)
+         ("M-g i" . consult-imenu)
+         ("M-s r" . consult-ripgrep)
+         ("M-s f" . consult-find)))
+
+(use-package embark
+  :bind (("C-." . embark-act)
+         ("C-," . embark-dwim))
+  :config
+  (setq prefix-help-command #'embark-prefix-help-command))
+
+(use-package embark-consult
+  :after (embark consult)
+  :hook (embark-collect-mode . consult-preview-at-point-mode))
+
 (use-package avy
   :bind ("C-'" . avy-goto-char-timer))
 
@@ -150,6 +168,11 @@
                     :weight 'normal
                     :box '(:line-width 2 :color "#232831"))
 (use-package yaml-mode)
+(use-package terraform-mode
+  :mode "\\.tf\\'"
+  :hook ((terraform-mode . terraform-format-on-save-mode)
+         (terraform-mode . eglot-ensure)
+         (terraform-mode . display-line-numbers-mode)))
 (use-package logview)
 (use-package web-mode
   :mode (("\\.erb\\'" . web-mode) ("\\.phtml\\'" . web-mode) ("\\.php\\'" . web-mode)
@@ -244,7 +267,10 @@
                '((elixir-ts-mode heex-ts-mode) . ("/Users/amackera/elixir-ls-v0.29.3/language_server.sh")))  
     ;; Ruby (optional, keep if you use it)
   (add-to-list 'eglot-server-programs
-               '(enh-ruby-mode . ("solargraph" "socket" "--port" :autoport))))
+               '(enh-ruby-mode . ("solargraph" "socket" "--port" :autoport)))
+  ;; Terraform
+  (add-to-list 'eglot-server-programs
+               '(terraform-mode . ("terraform-ls" "serve"))))
 
 ;; Ruff + Black via pylsp (disable overlapping linters)
 (setq eglot-workspace-configuration
@@ -263,7 +289,9 @@
 
 ;; (optional) format on save
 (add-hook 'python-ts-mode-hook
-          (lambda () (add-hook 'before-save-hook #'eglot-format-buffer nil t)))
+          (lambda ()
+            (add-hook 'before-save-hook #'delete-trailing-whitespace nil t)
+            (add-hook 'before-save-hook #'eglot-format-buffer nil t)))
 
 ;; If you use Flycheck elsewhere, avoid double diagnostics
 (with-eval-after-load 'flycheck
@@ -340,6 +368,7 @@
   :vc (:url "https://github.com/stevemolitor/claude-code.el" :rev :newest)
   :custom
   (claude-code-terminal-backend 'vterm)
+  (claude-code-optimize-window-resize nil)
   :bind-keymap ("C-c l" . claude-code-command-map)
   :bind
   (:repeat-map my-claude-code-map ("M" . claude-code-cycle-mode)))
@@ -378,7 +407,12 @@
     (let ((target-width (round (* 0.33 (frame-width)))))
       (with-selected-window win
         (enlarge-window-horizontally (- target-width (window-width))))
-      (my-eat-resize-window win))))
+      (with-current-buffer (window-buffer win)
+        (cond
+         ((derived-mode-p 'eat-mode) (my-eat-resize-window win))
+         ((derived-mode-p 'vterm-mode)
+          (vterm--window-adjust-process-window-size
+           vterm--process (list win))))))))
 
 (global-set-key (kbd "C-c w r") #'my-reset-side-window-width)
 
@@ -393,12 +427,13 @@
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
  '(package-selected-packages
-   '(0blayout auto-dim-other-buffers avy claude-code dimmer direnv eat
-              enh-ruby-mode exec-path-from-shell flycheck
-              kaolin-themes logview magit marginalia markdown-mode
-              orderless org-bullets paredit projectile pyvenv
-              rainbow-delimiters realgud shotify swift-ts-mode
-              typescript-mode vertico vterm web-mode yaml-mode))
+   '(0blayout auto-dim-other-buffers avy claude-code consult dimmer
+              direnv eat embark embark-consult enh-ruby-mode
+              exec-path-from-shell flycheck kaolin-themes logview
+              magit marginalia markdown-mode orderless org-bullets
+              paredit projectile pyvenv rainbow-delimiters realgud
+              shotify swift-ts-mode terraform-mode typescript-mode
+              vertico vterm web-mode yaml-mode))
  '(package-vc-selected-packages
    '((shotify :url "https://github.com/amackera/shotify" :lisp-dir
               "adapters/emacs")
