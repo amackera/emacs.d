@@ -96,21 +96,6 @@
                (display-buffer-same-window)
                (inhibit-same-window . nil)))
 
-;; Auto-open vterm buffers when switching projects
-(defun my-projectile-open-vterms ()
-  "Open three vterm buffers (server, shell, console) for the current project."
-  (let* ((project-name (projectile-project-name))
-         (project-root (projectile-project-root))
-         (buffers '("server" "shell" "console")))
-    (dolist (buf-name buffers)
-      (let ((vterm-buffer-name (format "*vterm-%s-%s*" project-name buf-name)))
-        (unless (get-buffer vterm-buffer-name)
-          (let ((vterm-shell (getenv "SHELL")))
-            (with-current-buffer (vterm vterm-buffer-name)
-              (rename-buffer vterm-buffer-name))))))))
-
-(add-hook 'projectile-after-switch-project-hook #'my-projectile-open-vterms)
-
 (use-package magit
   :config (setq magit-display-buffer-function
                 'magit-display-buffer-same-window-except-diff-v1))
@@ -289,17 +274,31 @@
   (add-to-list 'eglot-server-programs
                '((json-ts-mode) . ("vscode-json-language-server" "--stdio"))))
 
-;; Treesitter recipies
-(with-eval-after-load 'treesit
-  (setq treesit-language-source-alist
-        (append treesit-language-source-alist
-                '((json       "https://github.com/tree-sitter/tree-sitter-json")
-                  (python     "https://github.com/tree-sitter/tree-sitter-python")
-                  (javascript "https://github.com/tree-sitter/tree-sitter-javascript")
-                  (typescript "https://github.com/tree-sitter/tree-sitter-typescript" "master" "typescript/src")
-                  (tsx        "https://github.com/tree-sitter/tree-sitter-typescript" "master" "tsx/src")
-                  (elixir     "https://github.com/elixir-lang/tree-sitter-elixir")
-                  (heex       "https://github.com/phoenixframework/tree-sitter-heex")))))
+;; Treesitter recipes (format: LANG URL BRANCH SOURCE-DIR)
+(setq treesit-language-source-alist
+      '((json       "https://github.com/tree-sitter/tree-sitter-json" "master" "src")
+        (python     "https://github.com/tree-sitter/tree-sitter-python" "master" "src")
+        (javascript "https://github.com/tree-sitter/tree-sitter-javascript" "master" "src")
+        (typescript "https://github.com/tree-sitter/tree-sitter-typescript" "master" "typescript/src")
+        (tsx        "https://github.com/tree-sitter/tree-sitter-typescript" "master" "tsx/src")
+        (elixir     "https://github.com/elixir-lang/tree-sitter-elixir" "main" "src")
+        (heex       "https://github.com/phoenixframework/tree-sitter-heex" "main" "src")
+        (swift      "https://github.com/alex-pinkus/tree-sitter-swift" "main" "src")))
+
+;;; --- Swift ---
+(use-package swift-ts-mode
+  :ensure t
+  :mode "\\.swift\\'"
+  :hook ((swift-ts-mode . eglot-ensure)
+         (swift-ts-mode . (lambda ()
+                            (add-hook 'before-save-hook #'delete-trailing-whitespace nil t))))
+  :config
+  (setq swift-ts-mode-indent-offset 4))
+
+;; Add sourcekit-lsp for Swift
+(with-eval-after-load 'eglot
+  (add-to-list 'eglot-server-programs
+               '(swift-ts-mode . ("sourcekit-lsp"))))
 
 
 (defun my-eat-resize-window (win)
@@ -386,7 +385,7 @@
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
- '(package-selected-packages '(shotify))
+ '(package-selected-packages '(shotify swift-ts-mode))
  '(package-vc-selected-packages
    '((shotify :url "https://github.com/amackera/shotify" :lisp-dir
               "adapters/emacs")
