@@ -1,3 +1,11 @@
+;;; CLI mode stuff
+(xterm-mouse-mode 1)
+
+;;; clipboard
+(use-package osx-clipboard
+  :ensure t
+  :config
+  (osx-clipboard-mode +1))
 
 ;;; --- bootstrap package.el ---
 (setq package-enable-at-startup t)
@@ -431,11 +439,13 @@
               direnv eat embark embark-consult enh-ruby-mode
               exec-path-from-shell flycheck kaolin-themes logview
               magit marginalia markdown-mode orderless org-bullets
-              paredit projectile pyvenv rainbow-delimiters realgud
-              shotify swift-ts-mode terraform-mode typescript-mode
-              vertico vterm web-mode yaml-mode))
+              org-novelist osx-clipboard paredit projectile pyvenv
+              rainbow-delimiters realgud shotify swift-ts-mode
+              terraform-mode typescript-mode vertico vterm web-mode
+              yaml-mode))
  '(package-vc-selected-packages
-   '((shotify :url "https://github.com/amackera/shotify" :lisp-dir
+   '((org-novelist :url "https://github.com/sympodius/org-novelist.git")
+     (shotify :url "https://github.com/amackera/shotify" :lisp-dir
               "adapters/emacs")
      (claude-code :url
                   "https://github.com/stevemolitor/claude-code.el"))))
@@ -445,3 +455,31 @@
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
  )
+
+(use-package org-novelist
+  :vc (:url "https://github.com/sympodius/org-novelist.git"
+       :rev :newest)  ; Use the latest commit, rather than the latest release. For latest release, remove ":rev :newest"
+  :custom
+    (org-novelist-author "John Urquhart Ferguson")  ; The default author name to use when exporting a story. Each story can also override this setting
+    (org-novelist-author-email "mail@johnurquhartferguson.info")  ; The default author contact email to use when exporting a story. Each story can also override this setting
+    (org-novelist-automatic-referencing-p nil)  ; Set this variable to 't' if you want Org Novelist to always keep note links up to date. This may slow down some systems when operating on complex stories. It defaults to 'nil' when not set
+  :bind (("C-c n n s" . org-novelist-new-story)
+          :map org-novelist-mode-map
+          ("C-c n n c" . org-novelist-new-chapter)
+          ("C-c n d c" . org-novelist-destroy-chapter)
+          ("C-c n r c" . org-novelist-rename-chapter)
+          ("C-c n n a" . org-novelist-new-character)
+          ("C-c n d a" . org-novelist-destroy-character)
+          ("C-c n r a" . org-novelist-rename-character)
+          ("C-c n n p" . org-novelist-new-prop)
+          ("C-c n d p" . org-novelist-destroy-prop)
+          ("C-c n r p" . org-novelist-rename-prop)
+          ("C-c n n l" . org-novelist-new-place)
+          ("C-c n d l" . org-novelist-destroy-place)
+          ("C-c n r l" . org-novelist-rename-place)
+          ("C-c n u"   . org-novelist-update-references)
+          ("C-c n r s" . org-novelist-rename-story)
+          ("C-c n e"   . org-novelist-export-story)
+          ("C-c n l l" . org-novelist-link-to-story)
+          ("C-c n l u" . org-novelist-unlink-from-story)
+          ("C-c n t"   . org-novelist-toggle-automatic-referencing)))
