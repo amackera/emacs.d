@@ -42,3 +42,7 @@ This is a personal Emacs configuration using `use-package` for package managemen
 - Completion: Vertico + Orderless
 - Git interface: Magit
 - Terminal: vterm
+
+## Git Conventions
+- Do NOT add any Co-Authored-By lines or Claude attribution to commit messages
+- Do NOT mention Claude, Claude Code, or AI assistance in PR titles, descriptions, or comments
